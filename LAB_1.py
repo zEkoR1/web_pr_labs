@@ -1,8 +1,16 @@
 import requests
 from bs4 import BeautifulSoup
 
-url = "https://ultra.md/category/smartphones"
+# url = "https://ultra.md/category/smartphones"
+
+# test_url_sizeValidation
+url = "https://ultra.md/category/fans-ventiliatory"
 response = requests.get(url)
+
+if response.status_code != 200:
+    print(f"Failed to retrieve the main page, status code: {response.status_code}")
+    exit()
+
 soup = BeautifulSoup(response.text, 'html.parser')
 
 all_links = soup.find_all('a', class_='product-text pt-4 font-semibold text-gray-900 transition duration-200 hover:text-red-500 dark:text-white sm:text-sm')
@@ -13,15 +21,30 @@ for link, price in zip(all_links, all_prices):
     link_href = link.get('href')
 
     product_response = requests.get(link_href)
-    product_soup = BeautifulSoup(product_response.text, 'html.parser')
-    memory_label = product_soup.find('h3', string="Display")
 
-    if memory_label:
-        # memory_value_span = memory_label.find('span', class_='font-bold text-gray-800')
-        # memory = memory_value_span.text.strip() if memory_value_span else "N/A"
-        print('mn')
+    if product_response.status_code != 200:
+        print(f"Failed to retrieve the product page for {link_text}, status code: {product_response.status_code}")
+        continue
+
+    product_soup = BeautifulSoup(product_response.text, 'html.parser')
+
+    display_size = "N/A"
+    table_rows = product_soup.find_all('tr')
+
+    for row in table_rows:
+        label_span = row.find('span', string="Diagonala ecranului")
+        if label_span:
+            td = row.find('td', class_='font-bold')
+            if td:
+                display_size = td.text.strip()
+            break
     else:
-        # memory = "N/A"
-        print ("vvvv")
+        print(f"There is no Display size found for {link_text}")
+
     price_text = price.text.strip()
-    print(f"Link Text: {link_text}, URL: {link_href}, Price: {price_text}, ")
+    price_int = ''.join(filter(str.isdigit, price_text))
+
+    if not price_int:
+        print(f"No valid price found for product: {link_text}")
+
+    print(f"Product: {link_text}, URL: {link_href}, Price: {price_int} lei, Display Size: {display_size}")
