@@ -15,6 +15,7 @@ HOST = "ultra.md"
 PORT = 80
 url = "/category/smartphones"
 
+
 # Function to create and send a raw HTTP request over TCP socket, with redirect handling and HTTPS support
 def fetch_http(host, port, url, use_https=False, max_redirects=5):
     if max_redirects == 0:
@@ -56,7 +57,6 @@ def fetch_http(host, port, url, use_https=False, max_redirects=5):
         for line in headers.split('\r\n'):
             if line.startswith("Location:"):
                 new_location = line.split("Location: ")[1].strip()
-                # print(f"Redirected to: {new_location}")
                 # Handle relative redirects
                 if new_location.startswith('/'):
                     new_location = f"http://{host}{new_location}"
@@ -79,8 +79,7 @@ main_page_html = fetch_http(HOST, PORT, url)
 # Use BeautifulSoup to parse the response body
 soup = BeautifulSoup(main_page_html, 'html.parser')
 
-all_links = soup.find_all('a',
-                          class_='product-text pt-4 font-semibold text-gray-900 transition duration-200 hover:text-red-500 dark:text-white sm:text-sm')
+all_links = soup.find_all('a', class_='product-text pt-4 font-semibold text-gray-900 transition duration-200 hover:text-red-500 dark:text-white sm:text-sm')
 all_prices = soup.find_all('span', class_='text-blue text-xl font-bold dark:text-white')
 
 products = []
@@ -90,7 +89,6 @@ for link, price in zip(all_links, all_prices):
     link_href = link.get('href')
 
     if not link_text or len(link_text) < 5:
-        print(f"Invalid product name for URL: {link_href}")
         continue
 
     # Ensure the link is absolute
@@ -99,13 +97,10 @@ for link, price in zip(all_links, all_prices):
 
     # Fetch the individual product page using the socket method
     product_page_html = fetch_http(HOST, PORT, link_href, use_https=True)
-
-    # Use BeautifulSoup to parse the individual product page
     product_soup = BeautifulSoup(product_page_html, 'html.parser')
 
     # Extract product details like display size and price
     display_size = "N/A"
-
     summary_section = product_soup.find('div', class_='mt-[18px] lg:mt-6 mb-2 lg:mb-16')
     if summary_section:
         list_items = summary_section.find_all('li')
@@ -116,30 +111,16 @@ for link, price in zip(all_links, all_prices):
                     display_size = display_size_span.text.strip()
                 break
 
-    # Debug: Print raw HTML if something seems wrong
-    if display_size == "N/A" or not display_size.endswith('"'):
-        print(f"Invalid display size for product: {link_text}")
-        print(f"Page content: {product_page_html[:500]}")  # Print first 500 characters of the HTML
-        continue
-
     price_text = price.text.strip()
     price_int = ''.join(filter(str.isdigit, price_text))
 
-    if not price_int.isdigit():
-        print(f"Invalid price for product: {link_text}")
-        continue
-
-    # Add parsed product to the list
-    products.append({
-        'name': link_text,
-        'url': link_href,
-        'price_mdl': int(price_int),
-        'display_size': display_size
-    })
-
-# Debug: Print products before filtering
-for product in products:
-    print(f"Product: {product['name']}, Price (MDL): {product['price_mdl']}, Display Size: {product['display_size']}")
+    if price_int.isdigit():
+        products.append({
+            'name': link_text,
+            'url': link_href,
+            'price_mdl': int(price_int),
+            'display_size': display_size
+        })
 
 # Convert MDL to EUR
 def convert_to_eur(product):
@@ -166,4 +147,50 @@ final_data_structure = {
     'timestamp_utc': datetime.now(pytz.UTC).isoformat()
 }
 
-print(final_data_structure)
+
+### JSON Serialization (Manual) ###
+def serialize_to_json(data):
+    json_string = "{"
+    json_string += f'"filtered_products": ['
+    for product in data['filtered_products']:
+        json_string += '{'
+        json_string += f'"name": "{product["name"]}", '
+        json_string += f'"url": "{product["url"]}", '
+        json_string += f'"price_mdl": {product["price_mdl"]}, '
+        json_string += f'"display_size": "{product["display_size"]}", '
+        json_string += f'"price_eur": {product["price_eur"]}'
+        json_string += '},'
+    if len(data['filtered_products']) > 0:
+        json_string = json_string[:-1]  # Remove last comma
+    json_string += '],'
+    json_string += f'"total_sum_eur": {data["total_sum_eur"]}, '
+    json_string += f'"timestamp_utc": "{data["timestamp_utc"]}"'
+    json_string += "}"
+    return json_string
+
+
+### XML Serialization (Manual) ###
+def serialize_to_xml(data):
+    xml_string = "<data>"
+    xml_string += "<filtered_products>"
+    for product in data['filtered_products']:
+        xml_string += "<product>"
+        xml_string += f'<name>{product["name"]}</name>'
+        xml_string += f'<url>{product["url"]}</url>'
+        xml_string += f'<price_mdl>{product["price_mdl"]}</price_mdl>'
+        xml_string += f'<display_size>{product["display_size"]}</display_size>'
+        xml_string += f'<price_eur>{product["price_eur"]}</price_eur>'
+        xml_string += "</product>"
+    xml_string += "</filtered_products>"
+    xml_string += f'<total_sum_eur>{data["total_sum_eur"]}</total_sum_eur>'
+    xml_string += f'<timestamp_utc>{data["timestamp_utc"]}</timestamp_utc>'
+    xml_string += "</data>"
+    return xml_string
+
+
+# Print the manually constructed JSON and XML
+print("JSON Format:")
+print(serialize_to_json(final_data_structure))
+
+print("\nXML Format:")
+print(serialize_to_xml(final_data_structure))
