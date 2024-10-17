@@ -16,15 +16,13 @@ PORT = 80
 url = "/category/smartphones"
 
 
-# Function to create and send a raw HTTP request over TCP socket, with redirect handling and HTTPS support
 def fetch_http(host, port, url, use_https=False, max_redirects=5):
     if max_redirects == 0:
         raise Exception("Too many redirects")
 
     if use_https:
-        port = 443  # HTTPS port
+        port = 443
 
-    # Construct the HTTP request
     request = (
         f"GET {url} HTTP/1.1\r\n"
         f"Host: {host}\r\n"
@@ -32,7 +30,6 @@ def fetch_http(host, port, url, use_https=False, max_redirects=5):
         "Connection: close\r\n\r\n"
     )
 
-    # Create a TCP socket
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         if use_https:
             context = ssl.create_default_context()
@@ -48,11 +45,9 @@ def fetch_http(host, port, url, use_https=False, max_redirects=5):
                 break
             response += chunk
 
-    # Decode the response and separate headers from the body
     response_text = response.decode('utf-8', errors='replace')
     headers, body = response_text.split('\r\n\r\n', 1)
 
-    # Check for redirection (301 or 302 status codes)
     if "301 Moved Permanently" in headers or "302 Found" in headers:
         for line in headers.split('\r\n'):
             if line.startswith("Location:"):
@@ -73,10 +68,8 @@ def fetch_http(host, port, url, use_https=False, max_redirects=5):
 
     return body
 
-# Fetch the main page
 main_page_html = fetch_http(HOST, PORT, url)
 
-# Use BeautifulSoup to parse the response body
 soup = BeautifulSoup(main_page_html, 'html.parser')
 
 all_links = soup.find_all('a', class_='product-text pt-4 font-semibold text-gray-900 transition duration-200 hover:text-red-500 dark:text-white sm:text-sm')
@@ -91,15 +84,12 @@ for link, price in zip(all_links, all_prices):
     if not link_text or len(link_text) < 5:
         continue
 
-    # Ensure the link is absolute
     if not link_href.startswith('http'):
         link_href = f"http://{HOST}{link_href}"
 
-    # Fetch the individual product page using the socket method
     product_page_html = fetch_http(HOST, PORT, link_href, use_https=True)
     product_soup = BeautifulSoup(product_page_html, 'html.parser')
 
-    # Extract product details like display size and price
     display_size = "N/A"
     summary_section = product_soup.find('div', class_='mt-[18px] lg:mt-6 mb-2 lg:mb-16')
     if summary_section:
@@ -122,7 +112,6 @@ for link, price in zip(all_links, all_prices):
             'display_size': display_size
         })
 
-# Convert MDL to EUR
 def convert_to_eur(product):
     return {
         **product,
@@ -131,16 +120,13 @@ def convert_to_eur(product):
 
 mapped_products = list(map(convert_to_eur, products))
 
-# Filter products by price range
 def filter_by_price_range(product):
     return MIN_PRICE_EUR <= product['price_eur'] <= MAX_PRICE_EUR
 
 filtered_products = list(filter(filter_by_price_range, mapped_products))
 
-# Calculate the total sum in EUR
 total_sum_eur = reduce(lambda total, product: total + product['price_eur'], filtered_products, 0)
 
-# Final data structure
 final_data_structure = {
     'filtered_products': filtered_products,
     'total_sum_eur': round(total_sum_eur, 2),
@@ -148,7 +134,6 @@ final_data_structure = {
 }
 
 
-### JSON Serialization (Manual) ###
 def serialize_to_json(data):
     json_string = "{"
     json_string += f'"filtered_products": ['
@@ -161,7 +146,7 @@ def serialize_to_json(data):
         json_string += f'"price_eur": {product["price_eur"]}'
         json_string += '},'
     if len(data['filtered_products']) > 0:
-        json_string = json_string[:-1]  # Remove last comma
+        json_string = json_string[:-1]
     json_string += '],'
     json_string += f'"total_sum_eur": {data["total_sum_eur"]}, '
     json_string += f'"timestamp_utc": "{data["timestamp_utc"]}"'
@@ -169,7 +154,6 @@ def serialize_to_json(data):
     return json_string
 
 
-### XML Serialization (Manual) ###
 def serialize_to_xml(data):
     xml_string = "<data>"
     xml_string += "<filtered_products>"
@@ -186,6 +170,30 @@ def serialize_to_xml(data):
     xml_string += f'<timestamp_utc>{data["timestamp_utc"]}</timestamp_utc>'
     xml_string += "</data>"
     return xml_string
+def custom_serialize(data):
+    if isinstance(data, dict):
+        serialized = "D:{"
+        for key, value in data.items():
+            serialized += f'k:{custom_serialize(key)}:v:{custom_serialize(value)}; '
+        serialized = serialized.rstrip("; ") + "}"
+        return serialized
+    elif isinstance(data, list):
+        serialized = "L:["
+        for item in data:
+            serialized += f'{custom_serialize(item)}; '
+        serialized = serialized.rstrip("; ") + "]"
+        return serialized
+    elif isinstance(data, int):
+        return f"int({data})"
+    elif isinstance(data, str):
+        return f"str({data})"
+    else:
+        return str(data)
+
+# Example usage
+# Pass the final scraped data to custom_serialize
+print("Custom Serialized Format:")
+print(custom_serialize(final_data_structure))
 
 
 # Print the manually constructed JSON and XML
