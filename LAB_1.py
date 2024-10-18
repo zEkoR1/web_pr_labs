@@ -172,31 +172,28 @@ def serialize_to_xml(data):
     return xml_string
 def custom_serialize(data):
     if isinstance(data, dict):
-        serialized = "D:{"
+        serialized = "Dict{"
         for key, value in data.items():
-            serialized += f'k:{custom_serialize(key)}:v:{custom_serialize(value)}; '
+            serialized += f'Key-> {custom_serialize(key)}; Value-> {custom_serialize(value)}; '
         serialized = serialized.rstrip("; ") + "}"
         return serialized
     elif isinstance(data, list):
-        serialized = "L:["
+        serialized = "List["
         for item in data:
             serialized += f'{custom_serialize(item)}; '
         serialized = serialized.rstrip("; ") + "]"
         return serialized
     elif isinstance(data, int):
-        return f"int({data})"
+        return f"Integer({data})"
     elif isinstance(data, str):
-        return f"str({data})"
+        return f"String({data})"
     else:
         return str(data)
 
-# Example usage
-# Pass the final scraped data to custom_serialize
 print("Custom Serialized Format:")
 print(custom_serialize(final_data_structure))
 
 
-# Print the manually constructed JSON and XML
 print("JSON Format:")
 print(serialize_to_json(final_data_structure))
 
