@@ -1,0 +1,7 @@
+services:
+  lab1-http-server:
+    image: nicug/server-pr-lab1:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000

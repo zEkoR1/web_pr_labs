@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Room</title>
+    <!-- Include Socket.IO client library -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js" integrity="sha384-XXXX" crossorigin="anonymous"></script>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #chat { border: 1px solid #ccc; height: 300px; overflow-y: scroll; padding: 10px; margin-bottom: 10px; }
+        #message { width: 80%; padding: 10px; }
+        #send { width: 18%; padding: 10px; }
+        #username { width: 80%; padding: 10px; }
+        #join, #leave { padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Chat Room</h1>
+
+    <div>
+        <input id="username" placeholder="Enter your username" />
+        <button id="join">Join Room</button>
+        <button id="leave">Leave Room</button>
+    </div>
+
+    <div id="chat"></div>
+
+    <div>
+        <input id="message" placeholder="Enter your message" />
+        <button id="send">Send</button>
+    </div>
+
+    <script>
+        // Initialize Socket.IO client
+        const socket = io();
+
+        // DOM Elements
+        const chat = document.getElementById('chat');
+        const sendButton = document.getElementById('send');
+        const messageInput = document.getElementById('message');
+        const usernameInput = document.getElementById('username');
+        const joinButton = document.getElementById('join');
+        const leaveButton = document.getElementById('leave');
+
+        // Event Listeners
+        joinButton.addEventListener('click', () => {
+            const username = usernameInput.value.trim();
+            if (username) {
+                socket.emit('join', { username });
+                appendMessage(`You joined the room as ${username}.`);
+            } else {
+                alert('Please enter a username.');
+            }
+        });
+
+        leaveButton.addEventListener('click', () => {
+            const username = usernameInput.value.trim();
+            if (username) {
+                socket.emit('leave', { username });
+                appendMessage(`You left the room.`);
+            } else {
+                alert('Please enter your username.');
+            }
+        });
+
+        sendButton.addEventListener('click', () => {
+            const username = usernameInput.value.trim();
+            const message = messageInput.value.trim();
+            if (username && message) {
+                socket.emit('send_message', { username, message });
+                messageInput.value = '';
+            } else {
+                alert('Please enter both username and message.');
+            }
+        });
+
+        // Socket.IO Event Handlers
+        socket.on('connect', () => {
+            console.log('Connected to the server.');
+        });
+
+        socket.on('message', (data) => {
+            appendMessage(data.msg);
+        });
+
+        socket.on('error', (data) => {
+            alert(data.msg);
+        });
+
+        // Helper Function to Append Messages
+        function appendMessage(message) {
+            const msg = document.createElement('div');
+            msg.textContent = message;
+            chat.appendChild(msg);
+            chat.scrollTop = chat.scrollHeight;
+        }
+    </script>
+</body>
+</html>
