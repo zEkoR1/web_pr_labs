@@ -1,0 +1,12 @@
+# webserver/Dockerfile
+FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY webserver.py .
+
+RUN pip install --no-cache-dir Flask Flask_SQLAlchemy psycopg2-binary
+
+EXPOSE 5000
+
+CMD ["python", "webserver.py"]

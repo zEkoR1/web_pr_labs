@@ -1,0 +1,79 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"     # RabbitMQ default port
+      - "15672:15672"   # RabbitMQ Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db:
+    image: postgres:13
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: products_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  webserver:
+    build: ./webserver
+    container_name: webserver
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URI=postgresql://postgres:password@db:5432/products_db
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: on-failure
+
+  manager:
+    build: ./manager
+    container_name: manager
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      webserver:
+        condition: service_started
+    networks:
+      - app-network
+    restart: on-failure
+
+  scraper:
+    build: ./scraper
+    container_name: scraper
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: on-failure
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
