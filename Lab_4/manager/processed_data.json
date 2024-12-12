@@ -1,0 +1,71 @@
+{
+  "grouped_products": {
+    "3088x1440": [
+      {
+        "name": "Smartphone Samsung Galaxy S24+, 12GB/256GB, Amber Yellow",
+        "url": "https://ultra.md/product/s926-s24-plus-12256gb-yellow",
+        "price_mdl": 18499,
+        "price_eur": 948.67
+      },
+      {
+        "name": "Smartphone Samsung Galaxy S24+, 12GB/256GB, Marble Grey",
+        "url": "https://ultra.md/product/s926-s24-plus-12256gb-gray",
+        "price_mdl": 18499,
+        "price_eur": 948.67
+      },
+      {
+        "name": "Smartphone Samsung Galaxy S24+, 12GB/256GB, Onyx Black",
+        "url": "https://ultra.md/product/s926-s24-plus-12256gb-black",
+        "price_mdl": 18499,
+        "price_eur": 948.67
+      },
+      {
+        "name": "Smartphone Samsung Galaxy S24+, 12GB/256GB, Cobalt Violet",
+        "url": "https://ultra.md/product/s926-s24-plus-12256gb-violet",
+        "price_mdl": 18499,
+        "price_eur": 948.67
+      }
+    ],
+    "2340x1080": [
+      {
+        "name": "Smartphone Samsung Galaxy S24, 8GB/256GB, Cobalt Violet",
+        "url": "https://ultra.md/product/s921-s24-8256gb-violet",
+        "price_mdl": 15799,
+        "price_eur": 810.21
+      },
+      {
+        "name": "Smartphone Samsung Galaxy S24, 8GB/256GB, Onyx Black",
+        "url": "https://ultra.md/product/s921-s24-8256gb-black",
+        "price_mdl": 15799,
+        "price_eur": 810.21
+      },
+      {
+        "name": "Smartphone Samsung Galaxy S24, 8GB/256GB, Marble Grey",
+        "url": "https://ultra.md/product/s921-s24-8256gb-gray",
+        "price_mdl": 15799,
+        "price_eur": 810.21
+      },
+      {
+        "name": "Smartphone Samsung Galaxy S24, 8GB/128GB, Onyx Black",
+        "url": "https://ultra.md/product/s921-s24-8128gb-black",
+        "price_mdl": 14899,
+        "price_eur": 764.05
+      },
+      {
+        "name": "Smartphone Samsung Galaxy S24, 8GB/128GB, Marble Grey",
+        "url": "https://ultra.md/product/s921-s24-8128gb-gray",
+        "price_mdl": 14899,
+        "price_eur": 764.05
+      }
+    ]
+  },
+  "summary": {
+    "total_products": 9,
+    "group_count": {
+      "3088x1440": 4,
+      "2340x1080": 5
+    },
+    "total_sum_eur": 7753.41,
+    "timestamp_utc": "2024-12-12T15:39:19.927438+00:00"
+  }
+}

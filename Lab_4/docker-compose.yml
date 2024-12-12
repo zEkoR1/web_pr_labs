@@ -1,3 +1,5 @@
+
+
 services:
   rabbitmq:
     image: rabbitmq:3-management
@@ -49,13 +51,34 @@ services:
       - app-network
     restart: on-failure
 
+  ftp_server:
+    image: fauria/vsftpd
+    container_name: ftp_server
+    environment:
+      FTP_USER: "user"
+      FTP_PASS: "password"
+      PASV_ADDRESS: "0.0.0.0"
+    ports:
+      - "21:21"
+      - "21000-21010:21000-21010"
+    volumes:
+      - ftp_data:/home/vsftpd
+    networks:
+      - app-network
+
   manager:
     build: ./manager
     container_name: manager
+    environment:
+      FTP_HOST: "ftp_server"
+      FTP_USER: "user"
+      FTP_PASS: "password"
     depends_on:
       rabbitmq:
         condition: service_healthy
       webserver:
+        condition: service_started
+      ftp_server:
         condition: service_started
     networks:
       - app-network
@@ -73,6 +96,7 @@ services:
 
 volumes:
   postgres_data:
+  ftp_data:
 
 networks:
   app-network:
